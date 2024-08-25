@@ -13,10 +13,11 @@ spring:
     password: root
   jpa:
     hibernate:
+      dialect: org.hibernate.dialect.MySQL8Dialect
       ddl-auto: update
     show-sql: true
   kafka:
-    bootstrap-servers: localhost:9094
+    bootstrap-servers: kafka:9094
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -27,4 +28,4 @@ jwt:
 
 app:
   services:
-    profile: http://localhost:8081/profile
+    profile: http://profile-service:8081/profile

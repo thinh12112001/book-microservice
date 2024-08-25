@@ -1,8 +1,10 @@
-version: "3"
-name: bookteria
+version: '3.8'
+
 services:
   kafka:
     image: 'bitnami/kafka:3.7.0'
+    networks:
+      - bookonline
     container_name: kafka
     hostname: kafka
     ports:
@@ -12,6 +14,106 @@ services:
       - KAFKA_CFG_PROCESS_ROLES=controller,broker
       - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://kafka:9094
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+  neo4j:
+    image: neo4j:latest
+    networks:
+      - bookonline
+    environment:
+      NEO4J_AUTH: neo4j/12345678
+    ports:
+      - "7687:7687"
+      - "7474:7474"
+      - "7473:7473"
+  mysql:
+    image: mysql:8.0.36-debian
+    networks:
+      - bookonline
+    environment:
+      MYSQL_DATABASE: bookteria_identity
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+  mongodb:
+    image: bitnami/mongodb:7.0.11
+    networks:
+      - bookonline
+    environment:
+      MONGO_INITDB_DATABASE: notification-service
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - "27017:27017"
+  api-gateway:
+    image: thinh12112001/bookonline:api-gateway-0.0.6
+    ports:
+      - "8888:8888"
+    networks:
+      - bookonline
+    depends_on:
+      - identity-service
+      - profile-service
+      - notification-service
+      - post-service
+  identity-service:
+    image: thinh12112001/bookonline:identity-service-latest
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bookteria_identity
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    ports:
+      - "8080:8080"
+    networks:
+      - bookonline
+    depends_on:
+      - mysql
+  profile-service:
+    image: thinh12112001/bookonline:profile-service-0.0.2
+    ports:
+      - "8081:8081"
+    networks:
+      - bookonline
+    depends_on:
+      - neo4j
+  notification-service:
+    image: thinh12112001/bookonline:notification-service-0.0.1
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_APPLICATION_NAME: notification-service
+      SPRING_DATA_MONGODB_URI: mongodb://root:root@mongodb:27017/notification-service?authSource=admin
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_KAFKA_CONSUMER_GROUP_ID: notification-group
+      SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: earliest
+      SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
+      SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: org.springframework.kafka.support.serializer.JsonDeserializer
+      SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_TRUSTED_PACKAGES: "*"
+      NOTIFICATION_EMAIL_BREVO_URL: https://api.brevo.com
+      NOTIFICATION_EMAIL_BREVO_APIKEY: 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
+    networks:
+      - bookonline
+    depends_on:
+      - kafka
+      - mongodb
+  post-service:
+    image: thinh12112001/bookonline:post-service-0.0.1
+    environment:
+      SPRING_APPLICATION_NAME: post-service
+      SPRING_DATA_MONGODB_URI: mongodb://root:root@mongodb:27017/post-service?authSource=admin
+    depends_on:
+      - mongodb
+    ports:
+      - "8083:8083"
+    networks:
+      - bookonline
+
+networks:
+  bookonline:
+    driver: bridge
+
+volumes:
+  mysql-data:
