@@ -38,6 +38,8 @@ services:
       MYSQL_ROOT_PASSWORD: root
     ports:
       - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
   mongodb:
     image: bitnami/mongodb:7.0.11
     networks:
@@ -93,7 +95,7 @@ services:
       SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: org.springframework.kafka.support.serializer.JsonDeserializer
       SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_TRUSTED_PACKAGES: "*"
       NOTIFICATION_EMAIL_BREVO_URL: https://api.brevo.com
-      NOTIFICATION_EMAIL_BREVO_APIKEY: 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
+      NOTIFICATION_EMAIL_BREVO_APIKEY: <key>
     networks:
       - bookonline
     depends_on:
@@ -115,5 +117,3 @@ networks:
   bookonline:
     driver: bridge
 
-volumes:
-  mysql-data:
