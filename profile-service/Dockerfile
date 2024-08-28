@@ -12,7 +12,7 @@ COPY src ./src
 RUN mvn package -DskipTests
 
 #Stage 2
-FROM amazoncorretto:21.0.4
+FROM eclipse-temurin:21-jre-alpine
 
 COPY --from=build /app/target/*.jar profile-service.jar
 

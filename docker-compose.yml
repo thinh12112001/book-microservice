@@ -22,7 +22,7 @@ services:
     networks:
       - bookonline
     environment:
-      NEO4J_AUTH: neo4j/12345678
+      - "NEO4J_AUTH=neo4j/12345678"
     ports:
       - "7687:7687"
       - "7474:7474"
@@ -33,13 +33,11 @@ services:
       - bookonline
     environment:
       MYSQL_DATABASE: bookteria_identity
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
       MYSQL_ROOT_PASSWORD: root
     ports:
       - "3306:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
+#    volumes:
+#      - mysql-data:/var/lib/mysql
   mongodb:
     image: bitnami/mongodb:7.0.11
     networks:
@@ -51,7 +49,7 @@ services:
     ports:
       - "27017:27017"
   api-gateway:
-    image: thinh12112001/bookonline:api-gateway-0.0.6
+    image: thinh12112001/bookonline:api-gateway-latest
     ports:
       - "8888:8888"
     networks:
@@ -74,7 +72,7 @@ services:
     depends_on:
       - mysql
   profile-service:
-    image: thinh12112001/bookonline:profile-service-0.0.2
+    image: thinh12112001/bookonline:profile-service-latest
     ports:
       - "8081:8081"
     networks:
@@ -82,7 +80,7 @@ services:
     depends_on:
       - neo4j
   notification-service:
-    image: thinh12112001/bookonline:notification-service-0.0.1
+    image: thinh12112001/bookonline:notification-service-latest
     ports:
       - "8082:8082"
     environment:
@@ -102,7 +100,7 @@ services:
       - kafka
       - mongodb
   post-service:
-    image: thinh12112001/bookonline:post-service-0.0.1
+    image: thinh12112001/bookonline:post-service-latest
     environment:
       SPRING_APPLICATION_NAME: post-service
       SPRING_DATA_MONGODB_URI: mongodb://root:root@mongodb:27017/post-service?authSource=admin
